@@ -1,48 +1,80 @@
+
 import streamlit as st
 
-def determine_point_group(is_linear, has_inversion_center, num_rotation_axes, has_reflection_planes):
-    """Determines the point group based on the user inputs."""
+# Function to determine point group based on flowchart logic
+def determine_point_group(is_linear, has_inversion_center, has_multiple_rotation_axes, has_c5, highest_cn, has_perpendicular_cn2, has_horizontal_plane, has_sigma_v, has_s2n):
+    """Determines the point group based on the answers from the user."""
     
     if is_linear:
-        if num_rotation_axes == 1:
-            return "C∞v"  # Linear molecules with a single rotation axis
-        else:
-            return "D∞h"  # Linear molecules with two or more rotation axes
-    else:
         if has_inversion_center:
-            if num_rotation_axes == 0:
-                return "Ci"  # Molecule with inversion center but no other symmetry
-            elif num_rotation_axes == 1:
-                if has_reflection_planes:
-                    return "C2h"  # One C2 axis with inversion center and reflection plane
-                else:
-                    return "C2i"  # One C2 axis with inversion center but no reflection plane
-            elif num_rotation_axes > 1:
-                return "Oh"  # High symmetry (octahedral)
+            return "D∞h"
         else:
-            if num_rotation_axes == 0 and has_reflection_planes:
-                return "Cs"  # Reflection plane only
-            elif num_rotation_axes == 1:
-                return "C2v"  # One C2 axis with reflection planes
-            elif num_rotation_axes == 2:
-                return "D2h"  # Two C2 axes with reflection planes
+            return "C∞v"
+    else:
+        if has_multiple_rotation_axes:
+            if has_inversion_center:
+                if has_c5:
+                    return "Ih"  # Icosahedral group
+                else:
+                    return "Oh"  # Octahedral group
             else:
-                return "Unknown symmetry group"
+                return "Td"  # Tetrahedral group
+        else:
+            if has_inversion_center:
+                if highest_cn == 1:
+                    return "Ci"  # Inversion center only
+                elif highest_cn == 2:
+                    if has_perpendicular_cn2:
+                        return "Dnh"
+                    else:
+                        return "Dnd"
+                else:
+                    return "Dnh"  # General case for Dnh
+            else:
+                if highest_cn == 1:
+                    if has_horizontal_plane:
+                        return "Cs"  # Reflection plane only
+                    else:
+                        return "C1"  # No symmetry elements
+                elif highest_cn == 2:
+                    if has_horizontal_plane:
+                        return "C2h"  # C2 axis and horizontal plane
+                    else:
+                        return "C2v"  # C2 axis and vertical planes
+                elif has_s2n:
+                    return "S2n"
+                else:
+                    return "Cn"
 
 # Streamlit app interface
 
 st.title("Point Group Symmetry Identifier")
 
-st.write("Welcome to the point group identifier! Please answer the following questions about the molecular structure.")
+st.write("Answer the questions below to determine the point group of the molecule:")
 
-# Ask questions
+# Ask questions based on the flowchart
 is_linear = st.radio("Is the molecule linear?", ("Yes", "No")) == "Yes"
-has_inversion_center = st.radio("Does the molecule have an inversion center?", ("Yes", "No")) == "Yes"
-num_rotation_axes = st.slider("How many rotation axes (Cn) does the molecule have?", 0, 3, 0)
-has_reflection_planes = st.radio("Does the molecule have reflection planes?", ("Yes", "No")) == "Yes"
 
-# Determine the point group
-point_group = determine_point_group(is_linear, has_inversion_center, num_rotation_axes, has_reflection_planes)
+if is_linear:
+    has_inversion_center = st.radio("Does the molecule have an inversion center?", ("Yes", "No")) == "Yes"
+    point_group = determine_point_group(is_linear, has_inversion_center, None, None, None, None, None, None, None)
+else:
+    has_multiple_rotation_axes = st.radio("Does the molecule have two or more rotation axes (Cn, n > 2)?", ("Yes", "No")) == "Yes"
+    
+    if has_multiple_rotation_axes:
+        has_inversion_center = st.radio("Does the molecule have an inversion center?", ("Yes", "No")) == "Yes"
+        if not has_inversion_center:
+            has_c5 = st.radio("Does the molecule have a C5 axis?", ("Yes", "No")) == "Yes"
+        point_group = determine_point_group(is_linear, has_inversion_center, has_multiple_rotation_axes, has_c5, None, None, None, None, None)
+    else:
+        has_inversion_center = st.radio("Does the molecule have an inversion center?", ("Yes", "No")) == "Yes"
+        highest_cn = st.slider("What is the highest rotation axis (Cn)?", 1, 6, 1)
+        has_perpendicular_cn2 = st.radio("Is there a perpendicular C2 axis to the highest Cn?", ("Yes", "No")) == "Yes"
+        has_horizontal_plane = st.radio("Does the molecule have a horizontal reflection plane (σh)?", ("Yes", "No")) == "Yes"
+        has_sigma_v = st.radio("Does the molecule have vertical reflection planes (σv)?", ("Yes", "No")) == "Yes"
+        has_s2n = st.radio("Does the molecule have improper rotation (S2n)?", ("Yes", "No")) == "Yes"
+        
+        point_group = determine_point_group(is_linear, has_inversion_center, has_multiple_rotation_axes, None, highest_cn, has_perpendicular_cn2, has_horizontal_plane, has_sigma_v, has_s2n)
 
 # Display the result
 st.subheader("Point Group Result")
