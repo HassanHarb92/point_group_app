@@ -6,7 +6,7 @@ def determine_point_group(is_high_symmetry, highest_cn, has_perpendicular_c2, ha
     
     if is_high_symmetry:
         if has_perpendicular_c2:
-            return "Dnh" if has_horizontal_plane else "Dnd" if has_vertical_plane else "Dn"
+            return f"D{highest_cn}h" if has_horizontal_plane else f"D{highest_cn}d" if has_vertical_plane else f"D{highest_cn}"
         else:
             return "Td, Oh, Ih, C∞v, D∞h"  # High symmetry molecules
     else:
@@ -15,20 +15,20 @@ def determine_point_group(is_high_symmetry, highest_cn, has_perpendicular_c2, ha
         elif highest_cn > 1:
             if has_perpendicular_c2:
                 if has_horizontal_plane:
-                    return "Dnh"
+                    return f"D{highest_cn}h"
                 elif has_vertical_plane:
-                    return "Dnd"
+                    return f"D{highest_cn}d"
                 else:
-                    return "Dn"
+                    return f"D{highest_cn}"
             else:
                 if has_horizontal_plane:
-                    return "Cnh"
+                    return f"C{highest_cn}h"
                 elif has_vertical_plane:
-                    return "Cnv"
+                    return f"C{highest_cn}v"
                 elif has_improper_rotation:
-                    return "S2n"
+                    return f"S{2 * highest_cn}"
                 else:
-                    return "Cn"
+                    return f"C{highest_cn}"
 
 # Streamlit app interface
 
